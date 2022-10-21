@@ -2,8 +2,8 @@ package main
 
 import (
 	"fmt"
-	"github.com/koovee/thermia/entsoe"
-	"github.com/koovee/thermia/shelly"
+	"github.com/koovee/thermia/control"
+	"github.com/koovee/thermia/spotprice"
 	"os"
 	"strconv"
 	"time"
@@ -14,39 +14,52 @@ const (
 )
 
 type state struct {
-	entsoe    entsoe.State
-	shelly    shelly.State
+	sp        spotprice.State
+	cs        control.State
 	threshold float64
-	prices    map[string][]float64
 }
 
-var s state
-
 func main() {
-	s.getEnv()
-	s.entsoe = entsoe.Init()
-	s.shelly = shelly.Init()
+	s, err := getEnv()
+	if err != nil {
+		fmt.Printf("failed to get required environment variables\n")
+		return
+	}
 
-	// update spot prices once a day
-	ch := make(chan bool)
-	go s.entsoe.UpdateSpotPrices(ch)
+	err = s.sp.Init()
+	if err != nil {
+		fmt.Printf("failed to initialize spotprice module")
+		return
+	}
+	err = s.cs.Init()
+	if err != nil {
+		fmt.Printf("failed to initialize shelly module")
+		return
+	}
+
+	fmt.Printf("Thermia controller started\n")
 
 	// every even hour
-	timer := time.NewTimer(time.Now().Truncate(time.Hour).Add(time.Hour).Add(time.Second).Sub(time.Now()))
+	timer := time.NewTimer(time.Second)
+
 	for {
 		select {
-		case <-ch:
-			fmt.Printf("spot price update routine failed, exiting..")
-			return
+		//case <-s.sp.C:
+		//	fmt.Printf("spot price update routine failed, exiting..")
+		//	return
 		case <-timer.C:
-			price := s.getHourPrice(time.Now())
+			// Update prices
+			s.sp.UpdateSpotPrices()
+
+			// Control switch
+			price := s.sp.GetPrice(time.Now())
 			fmt.Printf("hourly price [%s]: %f\n", time.Now().Format(time.RFC822), price)
 
 			if price <= s.threshold {
-				shelly.SwitchOff()
+				s.cs.SwitchOff()
 			} else {
 				fmt.Printf("TURN SWITCH: ON (EVU / LOWERED TEMPERATURE) -- NOT REALLY\n")
-				shelly.SwitchOn()
+				s.cs.SwitchOn()
 			}
 
 			timer.Reset(time.Now().Truncate(time.Hour).Add(time.Hour).Add(time.Second).Sub(time.Now()))
@@ -54,22 +67,18 @@ func main() {
 	}
 }
 
-func (s *state) getEnv() {
+func getEnv() (s state, err error) {
 	threshold := os.Getenv("THRESHOLD")
 	if threshold != "" {
-		s.threshold, _ = strconv.ParseFloat(threshold, 64)
+		s.threshold, err = strconv.ParseFloat(threshold, 64)
+		if err != nil {
+			fmt.Printf("failed to parse float from environment variable (THRESHOLD): %s\n", err.Error())
+			return
+		}
 	}
 	if s.threshold == 0 {
 		s.threshold = defaultThreshold
 	}
-}
 
-// getHourPrice returns price in c/kWh
-func (s state) getHourPrice(time time.Time) float64 {
-	hour := time.Hour()
-	if len(s.prices[time.Format(entsoe.DateLayout)]) < hour-1 {
-		fmt.Printf("no pricing available for %s hour %d\n", time.String(), hour)
-		return 0
-	}
-	return s.prices[time.Format(entsoe.DateLayout)][hour] / 10
+	return
 }

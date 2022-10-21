@@ -1,4 +1,4 @@
-package shelly
+package control
 
 import (
 	"encoding/json"
@@ -29,17 +29,17 @@ type statusResponse struct {
 
 var s State
 
-func Init() State {
+func (s *State) Init() error {
 	err := s.getEnv()
 	if err != nil {
 		fmt.Printf("failed to get required environment variables")
-		return State{}
+		return err
 	}
-	return s
+	return nil
 }
 
-// shellySwitchOff turns switch OFF which means Thermia is operating in NORMAL mode
-func SwitchOff() error {
+// SwitchOff turns switch OFF which means Thermia is operating in NORMAL mode
+func (s State) SwitchOff() error {
 	var response statusResponse
 
 	// check current state
@@ -72,8 +72,8 @@ func SwitchOff() error {
 	return nil
 }
 
-// shellySwitchOn tunrs switch ON which means Thermia is operating in heat reduction mode (normal-2 degress)
-func SwitchOn() error {
+// SwitchOn tunrs switch ON which means Thermia is operating in heat reduction mode (normal-2 degress)
+func (s State) SwitchOn() error {
 	var response statusResponse
 
 	// check current state

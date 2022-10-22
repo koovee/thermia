@@ -7,6 +7,7 @@ This project adheres to [Semantic Versioning](http://semver.org/) and [Keep a Ch
 ---
 
 ### New
+* add -dryrun cmdline option (does not control relay when this is set)
 
 ### Changes
 * use interfaces

@@ -1,6 +1,7 @@
 package main
 
 import (
+	"flag"
 	"fmt"
 	"github.com/koovee/thermia/control"
 	"github.com/koovee/thermia/spotprice"
@@ -10,7 +11,7 @@ import (
 )
 
 const (
-	defaultThreshold = 5.0
+	defaultThreshold = 10.0
 )
 
 type state struct {
@@ -20,6 +21,10 @@ type state struct {
 }
 
 func main() {
+
+	dryRun := flag.Bool("dryrun", false, "disable relay control")
+	flag.Parse()
+	
 	s, err := getEnv()
 	if err != nil {
 		fmt.Printf("failed to get required environment variables\n")
@@ -31,7 +36,7 @@ func main() {
 		fmt.Printf("failed to initialize spotprice module")
 		return
 	}
-	err = s.cs.Init()
+	err = s.cs.Init(*dryRun)
 	if err != nil {
 		fmt.Printf("failed to initialize shelly module")
 		return
@@ -58,7 +63,6 @@ func main() {
 			if price <= s.threshold {
 				s.cs.SwitchOff()
 			} else {
-				fmt.Printf("TURN SWITCH: ON (EVU / LOWERED TEMPERATURE) -- NOT REALLY\n")
 				s.cs.SwitchOn()
 			}
 

@@ -1,7 +1,7 @@
 package control
 
 type Control interface {
-	Init() error
+	Init(dryRun bool) error
 	SwitchOn() error
 	SwitchOff() error
 }

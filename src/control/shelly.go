@@ -14,8 +14,9 @@ const (
 )
 
 type State struct {
-	url string
-	hc  *http.Client
+	url    string
+	hc     *http.Client
+	dryRun bool
 }
 
 type statusResponse struct {
@@ -29,12 +30,13 @@ type statusResponse struct {
 
 var s State
 
-func (s *State) Init() error {
+func (s *State) Init(dryRun bool) error {
 	err := s.getEnv()
 	if err != nil {
 		fmt.Printf("failed to get required environment variables")
 		return err
 	}
+	s.dryRun = dryRun
 	return nil
 }
 
@@ -56,17 +58,21 @@ func (s State) SwitchOff() error {
 	}
 	if response.Ison == true {
 		// change state
-		fmt.Printf("Switch is on, turning it off (NORMAL OPERATION)\n")
-		//resp, err := http.Get(s.url + "?turn=off")
-		//if err != nil {
-		//	fmt.Printf("Failed to create http request")
-		//	return errors.New("failed to create http request")
-		//}
-		//defer resp.Body.Close()
-		//if resp.StatusCode != http.StatusOK {
-		//	fmt.Printf("failed to set switch off: %s\n", err.Error())
-		//	return errors.New("failed to set switch off")
-		//}
+		if s.dryRun {
+			fmt.Printf("DRY RUN -- Switch is on, turning it off (NORMAL OPERATION) -- DRY RUN\n")
+		} else {
+			fmt.Printf("Switch is on, turning it off (NORMAL OPERATION)\n")
+			resp, err := http.Get(s.url + "?turn=off")
+			if err != nil {
+				fmt.Printf("Failed to create http request")
+				return errors.New("failed to create http request")
+			}
+			defer resp.Body.Close()
+			if resp.StatusCode != http.StatusOK {
+				fmt.Printf("failed to set switch off: %s\n", err.Error())
+				return errors.New("failed to set switch off")
+			}
+		}
 	}
 
 	return nil
@@ -90,17 +96,21 @@ func (s State) SwitchOn() error {
 	}
 	if response.Ison == false {
 		// change state
-		fmt.Printf("Switch is off, turning it on (EVU ON / LOWERED TEMPERATURE)\n")
-		//resp, err := http.Get(s.url + "?turn=on")
-		//if err != nil {
-		//	fmt.Printf("Failed to create http request")
-		//	return errors.New("failed to create http request")
-		//}
-		//defer resp.Body.Close()
-		//if resp.StatusCode != http.StatusOK {
-		//	fmt.Printf("failed to set switch on: %s\n", err.Error())
-		//	return errors.New("failed to set switch on")
-		//}
+		if s.dryRun {
+			fmt.Printf("DRY RUN -- Switch is off, turning it on (EVU ON / LOWERED TEMPERATURE) -- DRY RUN\n")
+		} else {
+			fmt.Printf("Switch is off, turning it on (EVU ON / LOWERED TEMPERATURE)\n")
+			resp, err := http.Get(s.url + "?turn=on")
+			if err != nil {
+				fmt.Printf("Failed to create http request")
+				return errors.New("failed to create http request")
+			}
+			defer resp.Body.Close()
+			if resp.StatusCode != http.StatusOK {
+				fmt.Printf("failed to set switch on: %s\n", err.Error())
+				return errors.New("failed to set switch on")
+			}
+		}
 	}
 
 	return nil

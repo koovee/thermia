@@ -22,3 +22,25 @@ func TestInit(t *testing.T) {
 	}
 	os.Unsetenv("SHELLY_URL")
 }
+
+// Need to mock http client..
+//func TestSwitchOn(t *testing.T) {
+//	cases := map[string]struct {
+//		expectedResult error
+//	}{
+//		"SwitchON when Switch is OFF": {
+//			expectedResult: nil,
+//		},
+//	}
+//
+//	os.Setenv("SHELLY_URL", "http://")
+//	s := State{}
+//	s.Init()
+//
+//	for k, tc := range cases {
+//		err := s.SwitchOn()
+//		if err != tc.expectedResult {
+//			t.Fatalf("%s: SwtichOn\ngot:  %s\nwant: %s\n", k, err, tc.expectedResult)
+//		}
+//	}
+//}

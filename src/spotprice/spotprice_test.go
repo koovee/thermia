@@ -12,13 +12,13 @@ func TestMain(m *testing.M) {
 func TestInit(t *testing.T) {
 	s := State{}
 
-	if err := s.Init(); err == nil {
-		t.Errorf("init() succeeded when it should have failed")
+	if err := s.Init(); err != nil {
+		t.Errorf("init() did not succeed")
 	}
 
 	os.Setenv("TOKEN", "12345")
 	if err := s.Init(); err != nil {
-		t.Errorf("init() did not succeed")
+		t.Errorf("init() with TOKEN set did not succeed")
 	}
 	os.Unsetenv("TOKEN")
 }

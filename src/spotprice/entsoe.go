@@ -87,23 +87,28 @@ func (s *State) UpdateSpotPrices() {
 	var retryCount = 0
 
 	yesterday := time.Now().Add(-24 * time.Hour).Format(DateLayout)
-	today := time.Now().Format(DateLayout)
+	day := time.Now().Format(DateLayout)
 	tomorrow := time.Now().Add(24 * time.Hour).Format(DateLayout)
 
 	s.M.Lock()
 	defer s.M.Unlock()
 
-	periodStart := today + "0000"
-	periodEnd := today + "0100"
+	periodStart := day + "0000"
+	periodEnd := day + "0100"
 
-	if time.Now().Hour() > 18 {
+	if time.Now().Hour() > 18 && len(s.HourPrice[day]) > 0 {
 		if len(s.HourPrice[tomorrow]) == 0 {
 			periodStart = tomorrow + "0000"
 			periodEnd = tomorrow + "0100"
+			day = tomorrow
+			// TODO: change variable name...
 		} else {
 			// enough pricing data in store..
 			return
 		}
+	} else if len(s.HourPrice[day]) > 0 {
+		// enough pricing data in store..
+		return
 	}
 
 	fmt.Printf("getting spot prices from %s\n", apiUrl)
@@ -111,7 +116,7 @@ func (s *State) UpdateSpotPrices() {
 	// delete yesterdays records
 	fmt.Printf("DEBUG: map size before cleanup: %d\n", len(s.HourPrice))
 	delete(s.HourPrice, yesterday)
-	fmt.Printf("DEBUG: map size after cleamup: %d\n", len(s.HourPrice))
+	fmt.Printf("DEBUG: map size after cleanup: %d\n", len(s.HourPrice))
 
 	req, err := http.NewRequest("GET", apiUrl, nil)
 	if err != nil {
@@ -159,7 +164,7 @@ func (s *State) UpdateSpotPrices() {
 				return
 			}
 		}
-		s.HourPrice[today] = p[:]
+		s.HourPrice[day] = p[:]
 	}
 
 	fmt.Printf("DEBUG: %v\n", s.HourPrice)

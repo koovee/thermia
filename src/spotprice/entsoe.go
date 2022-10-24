@@ -137,6 +137,10 @@ func (s *State) UpdateSpotPrices() {
 	req.URL.RawQuery = q.Encode()
 
 	resp, err := s.hc.Do(req)
+	if err != nil {
+		fmt.Printf("failed to make http request: %s\n", err.Error())
+		return
+	}
 	defer resp.Body.Close()
 
 	fmt.Printf("DEBUG: %s\n", req.URL)
@@ -145,13 +149,13 @@ func (s *State) UpdateSpotPrices() {
 	hourlyPrices := A44Response{}
 	body, err := io.ReadAll(resp.Body)
 	if err != nil {
-		fmt.Printf("failed to read http response body")
+		fmt.Printf("failed to read http response body\n")
 		return
 	}
 	//fmt.Printf("body: %s\n", body)
 
 	if err = xml.Unmarshal(body, &hourlyPrices); err != nil {
-		fmt.Printf("failed to unmarshal xml")
+		fmt.Printf("failed to unmarshal xml\n")
 		return
 	}
 
@@ -160,7 +164,7 @@ func (s *State) UpdateSpotPrices() {
 		for _, v := range v.Period.Point {
 			p[v.Position-1], err = strconv.ParseFloat(v.Price, 64)
 			if err != nil {
-				fmt.Printf("failed to convert price to float")
+				fmt.Printf("failed to convert price to float\n")
 				return
 			}
 		}
@@ -168,6 +172,36 @@ func (s *State) UpdateSpotPrices() {
 	}
 
 	fmt.Printf("DEBUG: %v\n", s.HourPrice)
+}
+
+// CheapestHours returns the cheapest n hours for a given day
+func (s State) CheapestHours(n int) (cheapestPrices []int) {
+	var cheapestIndex int
+	var cheapest float64
+
+	prices := s.HourPrice[time.Now().Format(DateLayout)]
+
+	for i := 0; i < n; i++ {
+		cheapest = 99999.99
+		for i, price := range prices {
+			if price < cheapest {
+				if len(cheapestPrices) > 0 {
+					if price <= prices[cheapestPrices[len(cheapestPrices)-1]] {
+						continue
+					}
+				}
+				cheapest = price
+				cheapestIndex = i
+			}
+		}
+		cheapestPrices = append(cheapestPrices, cheapestIndex)
+	}
+	return cheapestPrices
+}
+
+func (s State) IsCheapestHour(time time.Time, price float64, n int) bool {
+	fmt.Printf("TODO: IsCheapestHour")
+	return false
 }
 
 func (s *State) getEnv() error {

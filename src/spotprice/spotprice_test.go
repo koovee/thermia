@@ -12,8 +12,8 @@ func TestMain(m *testing.M) {
 func TestInit(t *testing.T) {
 	s := State{}
 
-	if err := s.Init(); err != nil {
-		t.Errorf("init() did not succeed")
+	if err := s.Init(); err == nil {
+		t.Errorf("init() should have failed, but it succeeded")
 	}
 
 	os.Setenv("TOKEN", "12345")

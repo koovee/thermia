@@ -52,7 +52,7 @@ type A44Response struct {
 func (s *State) Init() (err error) {
 	err = s.getEnv()
 	if err != nil {
-		fmt.Printf("failed to get required environment variables")
+		fmt.Printf("failed to get required environment variables: %s\n", err.Error())
 		return err
 	}
 
@@ -120,7 +120,7 @@ func (s *State) UpdateSpotPrices() {
 
 	req, err := http.NewRequest("GET", apiUrl, nil)
 	if err != nil {
-		fmt.Printf("Failed to create http request")
+		fmt.Printf("Failed to create http request\n")
 		retryCount++
 		time.Sleep(time.Second * time.Duration(retryCount*retryCount))
 		return
@@ -197,11 +197,6 @@ func (s State) CheapestHours(n int) (cheapestPrices []int) {
 		cheapestPrices = append(cheapestPrices, cheapestIndex)
 	}
 	return cheapestPrices
-}
-
-func (s State) IsCheapestHour(time time.Time, price float64, n int) bool {
-	fmt.Printf("TODO: IsCheapestHour")
-	return false
 }
 
 func (s *State) getEnv() error {

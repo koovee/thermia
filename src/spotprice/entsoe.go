@@ -77,7 +77,13 @@ func (s State) GetPrice(time time.Time) float64 {
 	hour := time.Hour()
 	if len(s.HourPrice[time.Format(DateLayout)]) == 0 {
 		fmt.Printf("no pricing available for %s hour %d\n", time.String(), hour)
-		return 0
+		// no pricing data available (problem with entsoe.eu api)
+		// return 0 for usually cheapest hours 00:00 - 05:00 hours and 9999.99 for 06:00 - 23:00
+		if hour < 6 {
+			return 0
+		} else {
+			return 9999.99
+		}
 	}
 	return s.HourPrice[time.Format(DateLayout)][hour] / 10
 }

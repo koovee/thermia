@@ -2,6 +2,10 @@ name: Go package
 
 on: [push]
 
+defaults:
+  run:
+    working-directory: src
+
 jobs:
   build:
 
@@ -15,7 +19,7 @@ jobs:
           go-version: 1.19
 
       - name: Install dependencies
-        run: go get .
+        run: cd src && go get .
 
       - name: Build
         run: go build -v ./...

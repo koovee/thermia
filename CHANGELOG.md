@@ -15,6 +15,7 @@ This project adheres to [Semantic Versioning](http://semver.org/) and [Keep a Ch
 * use interfaces
 
 ### Fixes
+* use 0.00 price when pricing is not available
 
 ### Breaks
 

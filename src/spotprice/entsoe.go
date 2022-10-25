@@ -75,7 +75,7 @@ func (s State) GetPrice(time time.Time) float64 {
 	s.M.Lock()
 	defer s.M.Unlock()
 	hour := time.Hour()
-	if len(s.HourPrice[time.Format(DateLayout)]) < hour-1 {
+	if len(s.HourPrice[time.Format(DateLayout)]) == 0 {
 		fmt.Printf("no pricing available for %s hour %d\n", time.String(), hour)
 		return 0
 	}

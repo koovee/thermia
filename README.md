@@ -1,8 +1,4 @@
-# TODO:
-
-- better error handling
-  - e.g. HANDLE RETRIES: failed to make http request: Get "https://transparency.entsoe.eu/api?In_domain=10YFI-1--------U&documentType=A44&out_domain=10YFI-1--------U&periodEnd=202210240100&periodStart=202210240000&securityToken=3fca2e0b-b569-4bf1-8a76-82fa975e03cc": net/http: TLS handshake timeout
-- test coverage
+![Build status](https://github.com/koovee/thermia/actions/workflows/test.yml/badge.svg)
 
 
 # Thermia controller

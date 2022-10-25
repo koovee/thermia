@@ -1,5 +1,5 @@
-![Build status](https://github.com/koovee/thermia/actions/workflows/test.yml/badge.svg)
-
+![Build](https://github.com/koovee/thermia/actions/workflows/build.yml/badge.svg)
+![Test](https://github.com/koovee/thermia/actions/workflows/test.yml/badge.svg)
 
 # Thermia controller
 

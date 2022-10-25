@@ -24,5 +24,4 @@ COPY --from=build-env /build/src/thermia /
 COPY --from=build-env /etc/ssl/certs/ca-certificates.crt /etc/ssl/certs/
 COPY --from=build-env /build/src/go.mod /
 ENV TZ="Europe/Helsinki"
-CMD ["./thermia"]
-
+ENTRYPOINT ["./thermia"]

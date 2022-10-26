@@ -1,0 +1,11 @@
+version: "3.9"
+
+services:
+  thermia:
+    image: ghcr.io/koovee/thermia:main
+    environment:
+      - TZ=Europe/Helsinki
+      - THRESHOLD=10
+      - ACTIVE_HOURS=6
+      - TOKEN=${TOKEN}
+    command: -dryrun=true

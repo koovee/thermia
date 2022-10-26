@@ -62,46 +62,33 @@ func main() {
 	for {
 		select {
 		case <-timer.C:
-			now := time.Now()
-
 			// Update prices
 			s.sp.UpdateSpotPrices()
 
-			// Control switch
-			price := s.sp.GetPrice(now)
-			fmt.Printf("hourly price [%s]: %f\n", time.Now().Format(time.RFC822), price)
-
-			if price <= s.threshold {
-				// heating ON / NORMAL mode (price is lower than the threshold)
-				err = s.cs.SwitchOff()
-				if err != nil {
-					fmt.Printf("failed to turn heat pump on: %s\n", err.Error())
-				}
+			// Control switch based on configuration and hourly price
+			if s.activeHours > 0 && s.threshold > 0 {
+				s.controlBasedOnThresholdAndActiveHours()
+			} else if s.activeHours > 0 {
+				s.controlBasedOnActiveHours()
+			} else if s.threshold > 0 {
+				s.controlBasedOnThreshold()
 			} else {
-				// price is higher than the threshold
-				if s.activeHours > 0 {
-					if isCheapestHour(s.sp.CheapestHours(s.activeHours)) {
-						// Heating ON / NORMAL mode (this is one of the cheapest hours)
-						fmt.Printf("Heating ON: price higher than threshold but this is one of the %d cheapest hours: %0.2f\n", s.activeHours, price)
-						err = s.cs.SwitchOff()
-						if err != nil {
-							fmt.Printf("failed to turn heat pump on: %s\n", err.Error())
-						}
-					} else {
-						fmt.Printf("Heating OFF: price higher than threshold and this is not one of the %d cheapest hours\n", s.activeHours)
-					}
-				} else {
-					// heating OFF / ROOM LOWERING mode
-					err = s.cs.SwitchOn()
-					if err != nil {
-						fmt.Printf("failed to turn heat pump off / room lowering mode: %s\n", err.Error())
-					}
-				}
+				s.controlBasedOnCron()
 			}
 
 			timer.Reset(time.Now().Truncate(time.Hour).Add(time.Hour).Add(time.Second).Sub(time.Now()))
 		}
 	}
+}
+
+func isCheapestHour(cheapestHours []int) bool {
+	hour := time.Now().Hour()
+	for _, cheapestHour := range cheapestHours {
+		if cheapestHour == hour {
+			return true
+		}
+	}
+	return false
 }
 
 func getEnv() (s state, err error) {
@@ -136,12 +123,53 @@ func getEnv() (s state, err error) {
 	return
 }
 
-func isCheapestHour(cheapestHours []int) bool {
-	hour := time.Now().Hour()
-	for _, cheapestHour := range cheapestHours {
-		if cheapestHour == hour {
-			return true
+func (s state) controlBasedOnThreshold() {
+
+}
+
+func (s state) controlBasedOnActiveHours() {
+
+}
+
+func (s state) controlBasedOnThresholdAndActiveHours() (err error) {
+	now := time.Now()
+	price := s.sp.GetPrice(now)
+
+	fmt.Printf("control based on threshold (%.2f) and active hours (%d)\n", s.threshold, s.activeHours)
+	fmt.Printf("hourly price [%s]: %.2f\n", time.Now().Format(time.RFC822), price)
+
+	if price <= s.threshold {
+		// heating ON / NORMAL mode (price is lower than the threshold)
+		err = s.cs.SwitchOff()
+		if err != nil {
+			fmt.Printf("failed to turn heat pump on: %s\n", err.Error())
+			return err
+		}
+	} else {
+		// price is higher than the threshold
+		if s.activeHours > 0 {
+			if isCheapestHour(s.sp.CheapestHours(s.activeHours)) {
+				// Heating ON / NORMAL mode (this is one of the cheapest hours)
+				fmt.Printf("Heating ON: price higher than threshold but this is one of the %d cheapest hours: %0.2f\n", s.activeHours, price)
+				err = s.cs.SwitchOff()
+				if err != nil {
+					fmt.Printf("failed to turn heat pump on: %s\n", err.Error())
+					return err
+				}
+			} else {
+				fmt.Printf("Heating OFF: price higher than threshold and this is not one of the %d cheapest hours\n", s.activeHours)
+			}
+		} else {
+			// heating OFF / ROOM LOWERING mode
+			err = s.cs.SwitchOn()
+			if err != nil {
+				fmt.Printf("failed to turn heat pump off / room lowering mode: %s\n", err.Error())
+			}
 		}
 	}
-	return false
+	return nil
+}
+
+func (s state) controlBasedOnCron() {
+
 }

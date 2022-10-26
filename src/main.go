@@ -65,15 +65,18 @@ func main() {
 			// Update prices
 			s.sp.UpdateSpotPrices()
 
-			// Control switch based on configuration and hourly price
+			// Control relay based on configuration and hourly price
 			if s.activeHours > 0 && s.threshold > 0 {
-				s.controlBasedOnThresholdAndActiveHours()
+				err = s.controlBasedOnThresholdAndActiveHours()
 			} else if s.activeHours > 0 {
-				s.controlBasedOnActiveHours()
+				err = s.controlBasedOnActiveHours()
 			} else if s.threshold > 0 {
-				s.controlBasedOnThreshold()
+				err = s.controlBasedOnThreshold()
 			} else {
-				s.controlBasedOnCron()
+				err = s.controlBasedOnCron()
+			}
+			if err != nil {
+				fmt.Printf("failed to control relay: %s\n", err.Error())
 			}
 
 			timer.Reset(time.Now().Truncate(time.Hour).Add(time.Hour).Add(time.Second).Sub(time.Now()))

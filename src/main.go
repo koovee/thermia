@@ -126,12 +126,12 @@ func getEnv() (s state, err error) {
 	return
 }
 
-func (s state) controlBasedOnThreshold() {
-
+func (s state) controlBasedOnThreshold() (err error) {
+	return nil
 }
 
-func (s state) controlBasedOnActiveHours() {
-
+func (s state) controlBasedOnActiveHours() (err error) {
+	return nil
 }
 
 func (s state) controlBasedOnThresholdAndActiveHours() (err error) {
@@ -173,6 +173,6 @@ func (s state) controlBasedOnThresholdAndActiveHours() (err error) {
 	return nil
 }
 
-func (s state) controlBasedOnCron() {
-
+func (s state) controlBasedOnCron() (err error) {
+	return nil
 }

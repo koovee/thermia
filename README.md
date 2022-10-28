@@ -14,16 +14,34 @@ Shelly switch is connected between 307 and 308 pins.
 
 There are two operating modes: *simple threshold* and *dynamic threshold*.
 
-## simple threshold
+## Threshold
 
-Heat pump is controlled based on `THRESHOLD` (maximum price in *c/kWh*). Heat pump is *OFF* or in *ROOM LOWERING* mode 
+Heating is controlled based on `THRESHOLD` (maximum price in *c/kWh*). Heating is *OFF* or in *ROOM LOWERING* mode 
 when price is higher than threshold and ON when price is lower than threshold.
 
-## dynamic threshold
+## Active hours
 
-If *spot prices* are lower than `THRESHOLD`, this mode operates as [simple threshold](#simple_thershold). However, if 
-*spot prices* are higher than threshold, heat pump is on during the cheapest hours of the day. `ACTIVE_HOURS` specifies
-the number of hours that heat pump needs to be active every day. 
+Heating is controlled based on `ACTIVE_HOURS` (specifies the number of hours that heating must be on during a day).
+Heating is *OFF* or in *ROOM LOWERING* mode when current hour is not one of the `ACTIVE_HOURS` cheapest hours of the 
+day.
+
+## Threshold and active hours
+
+Heating is on if hour price is lower than the `THRESHOLD` or hour is one of the cheapest hours of the day. This
+makes sure that heating is on at least *n* hours a day. Number of hours is specified by `ACTIVE_HOURS` environment 
+variable.
+
+## Schedule
+
+This is fallback mode that is normally used when *spot price* information is not available. Default hours are 00-06. 
+This can be overriden with `SCHEDULE` environment variable.
+
+```
+# from 00 to 06
+SCHEDULE="00,01,02,03,04,05,06"
+```
+
+In case only `SCHEDULE` environment variable is specified, fallback mode is used.
 
 # Configuration
 

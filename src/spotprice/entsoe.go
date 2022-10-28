@@ -16,6 +16,7 @@ import (
 const (
 	apiUrl     = "https://transparency.entsoe.eu/api"
 	DateLayout = "20060102"
+	highPrice  = 9999.99
 )
 
 type State struct {
@@ -71,21 +72,15 @@ func (s *State) Init() (err error) {
 }
 
 // GetPrice returns price in c/kWh
-func (s State) GetPrice(time time.Time) float64 {
+func (s State) GetPrice(time time.Time) (float64, error) {
 	s.M.Lock()
 	defer s.M.Unlock()
 	hour := time.Hour()
 	if len(s.HourPrice[time.Format(DateLayout)]) == 0 {
 		fmt.Printf("no pricing available for %s hour %d\n", time.String(), hour)
-		// no pricing data available (problem with entsoe.eu api)
-		// return 0 for usually cheapest hours 00:00 - 05:00 hours and 9999.99 for 06:00 - 23:00
-		if hour < 6 {
-			return 0
-		} else {
-			return 9999.99
-		}
+		return 0, errors.New("no price information available")
 	}
-	return s.HourPrice[time.Format(DateLayout)][hour] / 10
+	return s.HourPrice[time.Format(DateLayout)][hour] / 10, nil
 }
 
 // UpdateSpotPrices ..
@@ -188,7 +183,7 @@ func (s State) CheapestHours(n int) (cheapestPrices []int) {
 	prices := s.HourPrice[time.Now().Format(DateLayout)]
 
 	for i := 0; i < n; i++ {
-		cheapest = 99999.99
+		cheapest = highPrice
 		for i, price := range prices {
 			if price < cheapest {
 				if len(cheapestPrices) > 0 {

@@ -163,10 +163,15 @@ func (s *State) UpdateSpotPrices() {
 	for _, v := range hourlyPrices.TimeSeries {
 		var p [24]float64
 		for _, v := range v.Period.Point {
-			p[v.Position-1], err = strconv.ParseFloat(v.Price, 64)
-			if err != nil {
-				fmt.Printf("failed to convert price to float\n")
-				return
+			if v.Position > 24 {
+				fmt.Printf("DEBUG: v.Position larger than 24 -- check entsoe response!!\n")
+				fmt.Printf("DEBUG response body: %s\n", body)
+			} else {
+				p[v.Position-1], err = strconv.ParseFloat(v.Price, 64)
+				if err != nil {
+					fmt.Printf("failed to convert price to float\n")
+					return
+				}
 			}
 		}
 		s.HourPrice[day] = p[:]

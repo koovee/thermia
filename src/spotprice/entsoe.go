@@ -161,34 +161,31 @@ func (s *State) UpdateSpotPrices() {
 	}
 
 	for _, v := range hourlyPrices.TimeSeries {
-		var p [24]float64
+		var p []float64
+
+		// add dummy data for offset from utc hours
+		_, offset := time.Now().Zone()
+		offsetHours := offset / 3600
+		for i := 0; i < offset/3600; i++ {
+			fmt.Printf("foo\n")
+			p = append(p, highPrice)
+		}
+
 		for _, v := range v.Period.Point {
-			if v.Position == 1 {
-				// Period starts 1 hour of previous day
-				// TODO: better implementation..
+			if v.Position > 24 {
+				fmt.Printf("DEBUG: v.Position larger than 24 -- check entsoe response!!\n")
+				fmt.Printf("DEBUG response body: %s\n", body)
+			} else {
 				price, err := strconv.ParseFloat(v.Price, 64)
 				if err != nil {
 					fmt.Printf("failed to convert price to float\n")
 					return
 				}
-				if len(s.HourPrice[yesterday]) == 0 {
-					for i := 0; i < 23; i++ {
-						s.HourPrice[yesterday] = append(s.HourPrice[yesterday], highPrice)
-					}
-				}
-				s.HourPrice[yesterday] = append(s.HourPrice[yesterday], price)
-			} else if v.Position > 24 {
-				fmt.Printf("DEBUG: v.Position larger than 24 -- check entsoe response!!\n")
-				fmt.Printf("DEBUG response body: %s\n", body)
-			} else {
-				p[v.Position-1], err = strconv.ParseFloat(v.Price, 64)
-				if err != nil {
-					fmt.Printf("failed to convert price to float\n")
-					return
-				}
+				p = append(p, price)
 			}
 		}
-		s.HourPrice[day] = p[:]
+		s.HourPrice[day] = p[offsetHours-1 : 24+offsetHours-1]
+		s.HourPrice[tomorrow] = p[24+offsetHours-1:]
 	}
 
 	fmt.Printf("DEBUG: %v\n", s.HourPrice)

@@ -167,7 +167,6 @@ func (s *State) UpdateSpotPrices() {
 		_, offset := time.Now().Zone()
 		offsetHours := offset / 3600
 		for i := 0; i < offset/3600; i++ {
-			fmt.Printf("foo\n")
 			p = append(p, highPrice)
 		}
 

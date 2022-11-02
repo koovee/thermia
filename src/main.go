@@ -95,15 +95,15 @@ func main() {
 	}
 }
 
-func isCheapestHour(cheapestHours []int) bool {
-	hour := time.Now().Hour()
-	for _, cheapestHour := range cheapestHours {
-		if cheapestHour == hour {
-			return true
-		}
-	}
-	return false
-}
+//func isCheapestHour(cheapestHours []int) bool {
+//	hour := time.Now().Hour()
+//	for _, cheapestHour := range cheapestHours {
+//		if cheapestHour == hour {
+//			return true
+//		}
+//	}
+//	return false
+//}
 
 func getEnv() (s state, err error) {
 	threshold := os.Getenv("THRESHOLD")
@@ -200,7 +200,7 @@ func (s state) controlBasedOnActiveHours() (err error) {
 		return err
 	}
 
-	if isCheapestHour(s.sp.CheapestHours(s.activeHours)) {
+	if spotprice.IsCheapestHour(now.Hour(), s.sp.CheapestHours(s.activeHours)) {
 		// Heating ON / NORMAL mode (this is one of the cheapest hours)
 		fmt.Printf("Heating ON: this is one of the %d cheapest hours: %0.2f\n", s.activeHours, price)
 		err = s.cs.SwitchOff()
@@ -241,7 +241,7 @@ func (s state) controlBasedOnThresholdAndActiveHours() (err error) {
 	} else {
 		// price is higher than the threshold
 		if s.activeHours > 0 {
-			if isCheapestHour(s.sp.CheapestHours(s.activeHours)) {
+			if spotprice.IsCheapestHour(now.Hour(), s.sp.CheapestHours(s.activeHours)) {
 				// Heating ON / NORMAL mode (this is one of the cheapest hours)
 				fmt.Printf("Heating ON: price higher than threshold but this is one of the %d cheapest hours: %0.2f\n", s.activeHours, price)
 				err = s.cs.SwitchOff()

@@ -15,3 +15,12 @@ type SpotPrice interface {
 }
 
 type HourPrices map[string][]float64
+
+func IsCheapestHour(hour int, cheapestHours []int) bool {
+	for _, cheapestHour := range cheapestHours {
+		if cheapestHour == hour {
+			return true
+		}
+	}
+	return false
+}

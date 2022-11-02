@@ -76,7 +76,7 @@ func (s State) GetPrice(time time.Time) (float64, error) {
 	s.M.Lock()
 	defer s.M.Unlock()
 	hour := time.Hour()
-	if len(s.HourPrice[time.Format(DateLayout)]) == 0 {
+	if len(s.HourPrice[time.Format(DateLayout)]) < hour {
 		fmt.Printf("no pricing available for %s hour %d\n", time.String(), hour)
 		return 0, errors.New("no price information available")
 	}
@@ -98,7 +98,7 @@ func (s *State) UpdateSpotPrices() {
 	periodEnd := day + "0100"
 
 	if time.Now().Hour() > 18 && len(s.HourPrice[day]) > 0 {
-		if len(s.HourPrice[tomorrow]) == 0 {
+		if len(s.HourPrice[tomorrow]) < 24 {
 			periodStart = tomorrow + "0000"
 			periodEnd = tomorrow + "0100"
 			day = tomorrow

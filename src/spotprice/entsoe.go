@@ -95,7 +95,7 @@ func (s *State) UpdateSpotPrices() {
 	defer s.M.Unlock()
 
 	periodStart := day + "0000"
-	periodEnd := day + "0100"
+	periodEnd := tomorrow + "0000"
 
 	if time.Now().Hour() > 18 && len(s.HourPrice[day]) > 0 {
 		if len(s.HourPrice[tomorrow]) < 24 {
@@ -163,6 +163,15 @@ func (s *State) UpdateSpotPrices() {
 	for _, v := range hourlyPrices.TimeSeries {
 		var p []float64
 
+		periodStart, err := time.Parse("2006-01-02T15:04Z", v.Period.TimeInterval.Start)
+		if err != nil {
+			fmt.Printf("failed to parse Period.TimeInterval.Start: %s\n", err.Error())
+			fmt.Printf("DEBUG response body: %s\n", body)
+			return
+		}
+		day = periodStart.Add(time.Hour * 24).Format(DateLayout)
+		tomorrow = periodStart.Add(time.Hour * 48).Format(DateLayout)
+
 		// add dummy data for offset from utc hours
 		_, offset := time.Now().Zone()
 		offsetHours := offset / 3600
@@ -183,8 +192,14 @@ func (s *State) UpdateSpotPrices() {
 				p = append(p, price)
 			}
 		}
-		s.HourPrice[day] = p[offsetHours-1 : 24+offsetHours-1]
-		s.HourPrice[tomorrow] = p[24+offsetHours-1:]
+		if len(s.HourPrice[day]) == 0 {
+			s.HourPrice[day] = p[offsetHours-1 : 24+offsetHours-1]
+			s.HourPrice[tomorrow] = p[24+offsetHours-1:]
+		} else {
+			// length is 1
+			s.HourPrice[day] = append(s.HourPrice[day], p[offsetHours:24+offsetHours-1]...)
+			s.HourPrice[tomorrow] = p[24+offsetHours-1:]
+		}
 	}
 
 	fmt.Printf("DEBUG: %v\n", s.HourPrice)

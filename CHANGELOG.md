@@ -13,8 +13,7 @@ This project adheres to [Semantic Versioning](http://semver.org/) and [Keep a Ch
 ### Changes
 
 ### Fixes
-* update day ahead prices
-* hourly prices where off by one hour
+* day ahead price handling
 
 ### Breaks
 

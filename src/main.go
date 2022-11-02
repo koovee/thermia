@@ -95,16 +95,6 @@ func main() {
 	}
 }
 
-//func isCheapestHour(cheapestHours []int) bool {
-//	hour := time.Now().Hour()
-//	for _, cheapestHour := range cheapestHours {
-//		if cheapestHour == hour {
-//			return true
-//		}
-//	}
-//	return false
-//}
-
 func getEnv() (s state, err error) {
 	threshold := os.Getenv("THRESHOLD")
 	if threshold != "" {

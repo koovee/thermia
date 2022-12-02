@@ -22,6 +22,7 @@ const (
 type State struct {
 	token     string
 	threshold float64
+	maxPrice  float64
 	HourPrice HourPrices
 	C         chan bool
 	M         *sync.Mutex

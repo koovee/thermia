@@ -4,12 +4,13 @@ import (
 	"errors"
 	"flag"
 	"fmt"
-	"github.com/koovee/thermia/control"
-	"github.com/koovee/thermia/spotprice"
 	"os"
 	"strconv"
 	"strings"
 	"time"
+
+	"github.com/koovee/thermia/control"
+	"github.com/koovee/thermia/spotprice"
 )
 
 const (
@@ -23,6 +24,7 @@ type state struct {
 	sp          spotprice.State
 	cs          control.State
 	threshold   float64
+	maxPrice    float64
 	activeHours int
 	schedule    map[int]bool
 	tz          string
@@ -105,6 +107,15 @@ func getEnv() (s state, err error) {
 		}
 	}
 
+	maxPrice := os.Getenv("MAX_PRICE")
+	if maxPrice != "" {
+		s.maxPrice, err = strconv.ParseFloat(maxPrice, 64)
+		if err != nil {
+			fmt.Printf("failed to parse float from environment variable (MAX_PRICE): %s\n", err.Error())
+			return
+		}
+	}
+
 	activeHours := os.Getenv("ACTIVE_HOURS")
 	if activeHours != "" {
 		s.activeHours, err = strconv.Atoi(activeHours)
@@ -181,7 +192,7 @@ func (s state) controlBasedOnThreshold() (err error) {
 	return nil
 }
 
-// controlBasedOnActiveHours controls heating based on activeHours
+// controlBasedOnActiveHours controls heating based on activeHours (and maxPrice if set)
 func (s state) controlBasedOnActiveHours() (err error) {
 	now := time.Now()
 	price, err := s.sp.GetPrice(now)
@@ -191,12 +202,17 @@ func (s state) controlBasedOnActiveHours() (err error) {
 	}
 
 	if spotprice.IsCheapestHour(now.Hour(), s.sp.CheapestHours(s.activeHours)) {
-		// Heating ON / NORMAL mode (this is one of the cheapest hours)
-		fmt.Printf("Heating ON: this is one of the %d cheapest hours: %0.2f\n", s.activeHours, price)
-		err = s.cs.SwitchOff()
-		if err != nil {
-			fmt.Printf("failed to turn heat pump on: %s\n", err.Error())
-			return err
+		// This is one of the cheapest hours
+		if price > s.maxPrice {
+			fmt.Printf("Heating OFF: this is one of the %d cheapest hours: %0.2f, but price is higher than maxPrice (%0.2f)\n", s.activeHours, price, s.maxPrice)
+		} else {
+			// Heating ON / NORMAL mode (this is one of the cheapest hours)
+			fmt.Printf("Heating ON: this is one of the %d cheapest hours: %0.2f\n", s.activeHours, price)
+			err = s.cs.SwitchOff()
+			if err != nil {
+				fmt.Printf("failed to turn heat pump on: %s\n", err.Error())
+				return err
+			}
 		}
 	} else {
 		fmt.Printf("Heating OFF: this is not one of the %d cheapest hours\n", s.activeHours)
@@ -209,7 +225,7 @@ func (s state) controlBasedOnActiveHours() (err error) {
 	return nil
 }
 
-// controlBasedOnThresholdAndActiveHours controls heating based on threshold and activeHours
+// controlBasedOnThresholdAndActiveHours controls heating based on threshold and activeHours (and maxPrice if set)
 func (s state) controlBasedOnThresholdAndActiveHours() (err error) {
 	now := time.Now()
 	price, err := s.sp.GetPrice(now)
@@ -232,12 +248,17 @@ func (s state) controlBasedOnThresholdAndActiveHours() (err error) {
 		// price is higher than the threshold
 		if s.activeHours > 0 {
 			if spotprice.IsCheapestHour(now.Hour(), s.sp.CheapestHours(s.activeHours)) {
-				// Heating ON / NORMAL mode (this is one of the cheapest hours)
-				fmt.Printf("Heating ON: price higher than threshold but this is one of the %d cheapest hours: %0.2f\n", s.activeHours, price)
-				err = s.cs.SwitchOff()
-				if err != nil {
-					fmt.Printf("failed to turn heat pump on: %s\n", err.Error())
-					return err
+				// This is one of the cheapest hours
+				if price > s.maxPrice {
+					fmt.Printf("Heating OFF: this is one of the %d cheapest hours: %0.2f, but price is higher than maxPrice (%0.2f)\n", s.activeHours, price, s.maxPrice)
+				} else {
+					// Heating ON / NORMAL mode (this is one of the cheapest hours)
+					fmt.Printf("Heating ON: price higher than threshold but this is one of the %d cheapest hours: %0.2f\n", s.activeHours, price)
+					err = s.cs.SwitchOff()
+					if err != nil {
+						fmt.Printf("failed to turn heat pump on: %s\n", err.Error())
+						return err
+					}
 				}
 			} else {
 				fmt.Printf("Heating OFF: price higher than threshold and this is not one of the %d cheapest hours\n", s.activeHours)

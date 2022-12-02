@@ -17,6 +17,12 @@ This project adheres to [Semantic Versioning](http://semver.org/) and [Keep a Ch
 
 ### Breaks
 
+## 0.3.0 - (2022-10-28)
+---
+
+### New
+* add maxPrice setting (heating off/lower if price is higher than maxPrice)
+
 
 ## 0.2.0 - (2022-10-28)
 ---

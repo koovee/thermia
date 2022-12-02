@@ -13,7 +13,6 @@ This project adheres to [Semantic Versioning](http://semver.org/) and [Keep a Ch
 ### Changes
 
 ### Fixes
-* day ahead price handling
 
 ### Breaks
 
@@ -23,6 +22,8 @@ This project adheres to [Semantic Versioning](http://semver.org/) and [Keep a Ch
 ### New
 * add maxPrice setting (heating off/lower if price is higher than maxPrice)
 
+### Fixes
+* day ahead price handling
 
 ## 0.2.0 - (2022-10-28)
 ---

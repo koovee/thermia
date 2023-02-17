@@ -4,7 +4,7 @@ ENV GOPATH /build
 ENV CGO_ENABLED 0
 RUN apt-get update && apt-get install -y tzdata
 
-RUN curl -sfL https://raw.githubusercontent.com/securego/gosec/master/install.sh | sh -s latest
+RUN curl -sfL https://raw.githubusercontent.com/securego/gosec/master/install.sh | sh -s
 RUN curl https://github.com/sonatype-nexus-community/nancy/releases/download/v1.0.41/nancy-v1.0.41-linux-amd64 -o bin/nancy && chmod +x bin/nancy
 
 # optimize dependency download

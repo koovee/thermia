@@ -14,7 +14,7 @@ import (
 )
 
 const (
-	apiUrl     = "https://transparency.entsoe.eu/api"
+	apiUrl     = "https://web-api.tp.entsoe.eu/api"
 	DateLayout = "20060102"
 	highPrice  = 9999.99
 )

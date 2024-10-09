@@ -95,13 +95,13 @@ func (s *State) UpdateSpotPrices() {
 	s.M.Lock()
 	defer s.M.Unlock()
 
-	periodStart := day + "0000"
-	periodEnd := tomorrow + "0000"
+	requestedPeriodStart := day + "0000"
+	requestedPeriodEnd := tomorrow + "0000"
 
 	if time.Now().Hour() > 18 && len(s.HourPrice[day]) > 0 {
 		if len(s.HourPrice[tomorrow]) < 24 {
-			periodStart = tomorrow + "0000"
-			periodEnd = tomorrow + "0100"
+			requestedPeriodStart = tomorrow + "0000"
+			requestedPeriodEnd = tomorrow + "0100"
 			day = tomorrow
 			// TODO: change variable name...
 		} else {
@@ -134,8 +134,8 @@ func (s *State) UpdateSpotPrices() {
 	q.Add("documentType", "A44")
 	q.Add("In_domain", "10YFI-1--------U")
 	q.Add("out_domain", "10YFI-1--------U")
-	q.Add("periodStart", periodStart)
-	q.Add("periodEnd", periodEnd)
+	q.Add("periodStart", requestedPeriodStart)
+	q.Add("periodEnd", requestedPeriodEnd)
 	req.URL.RawQuery = q.Encode()
 
 	resp, err := s.hc.Do(req)
@@ -170,6 +170,13 @@ func (s *State) UpdateSpotPrices() {
 			fmt.Printf("DEBUG response body: %s\n", body)
 			return
 		}
+
+		fmt.Printf("requestedPerdidStart: %s\n", requestedPeriodStart)
+		if periodStart.Format("200601020000") != requestedPeriodStart {
+			fmt.Printf("did not get data for requested range, requested %s, got %s\n", requestedPeriodStart, periodStart.Format("200601020000"))
+			continue
+		}
+
 		day = periodStart.Add(time.Hour * 24).Format(DateLayout)
 		tomorrow = periodStart.Add(time.Hour * 48).Format(DateLayout)
 
@@ -194,11 +201,8 @@ func (s *State) UpdateSpotPrices() {
 			}
 		}
 		if len(s.HourPrice[day]) == 0 {
-			fmt.Printf("offsetHours: %d\n", offsetHours)
 			s.HourPrice[day] = p[offsetHours-1 : 24+offsetHours-1]
-			if len(p) > 24+offsetHours-1 {
-				s.HourPrice[tomorrow] = p[24+offsetHours-1:]
-			}
+			s.HourPrice[tomorrow] = p[24+offsetHours-1:]
 		} else {
 			// length is 1
 			s.HourPrice[day] = append(s.HourPrice[day], p[offsetHours:24+offsetHours-1]...)

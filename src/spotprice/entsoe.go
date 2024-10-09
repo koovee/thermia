@@ -194,8 +194,11 @@ func (s *State) UpdateSpotPrices() {
 			}
 		}
 		if len(s.HourPrice[day]) == 0 {
+			fmt.Printf("offsetHours: %d\n", offsetHours)
 			s.HourPrice[day] = p[offsetHours-1 : 24+offsetHours-1]
-			s.HourPrice[tomorrow] = p[24+offsetHours-1:]
+			if len(p) > 24+offsetHours-1 {
+				s.HourPrice[tomorrow] = p[24+offsetHours-1:]
+			}
 		} else {
 			// length is 1
 			s.HourPrice[day] = append(s.HourPrice[day], p[offsetHours:24+offsetHours-1]...)

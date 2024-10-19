@@ -171,41 +171,42 @@ func (s *State) UpdateSpotPrices() {
 			return
 		}
 		day = periodStart.Add(time.Hour * 24).Format(DateLayout)
-		tomorrow = periodStart.Add(time.Hour * 48).Format(DateLayout)
 
-		// add dummy data for offset from utc hours
-		_, offset := time.Now().Zone()
-		offsetHours := offset / 3600
-		for i := 0; i < offset/3600; i++ {
-			p = append(p, highPrice)
-		}
+		// entsoe data starts from 00:00 no matter what is requested
+		// if period.Point is missing, use previous value!!
 
+		currentPosition := 0
+		previousPrice := highPrice
 		for _, v := range v.Period.Point {
 			if v.Position > 24 {
 				fmt.Printf("DEBUG: v.Position larger than 24 -- check entsoe response!!\n")
 				fmt.Printf("DEBUG response body: %s\n", body)
 			} else {
-				price, err := strconv.ParseFloat(v.Price, 64)
+				for ; currentPosition < v.Position-1; currentPosition++ {
+					p = append(p, previousPrice)
+				}
+
+				previousPrice, err = strconv.ParseFloat(v.Price, 64)
 				if err != nil {
 					fmt.Printf("failed to convert price to float\n")
 					return
 				}
-				p = append(p, price)
+				//				previousPrice *= 1.24
+				p = append(p, previousPrice)
+				currentPosition++
 			}
 		}
-		if len(s.HourPrice[day]) == 0 {
-			s.HourPrice[day] = p[offsetHours-1 : 24+offsetHours-1]
-			if len(p) >= 24+offsetHours-1 {
-				s.HourPrice[tomorrow] = p[24+offsetHours-1:]
-			}
-		} else {
-			// length is 1
-			s.HourPrice[day] = append(s.HourPrice[day], p[offsetHours:24+offsetHours-1]...)
-			s.HourPrice[tomorrow] = p[24+offsetHours-1:]
-		}
+		s.HourPrice[day] = p[:24]
 	}
 
-	fmt.Printf("DEBUG: %v\n", s.HourPrice)
+	// DEBUG
+	for day, prices := range s.HourPrice {
+		fmt.Printf("%s: ", day)
+		for hour, price := range prices {
+			fmt.Printf("%d:%v ", hour, price)
+		}
+		fmt.Printf("\n")
+	}
 }
 
 // CheapestHours returns the cheapest n hours for a given day
